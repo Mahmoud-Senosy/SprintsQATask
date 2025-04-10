@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [All Test Suite]" guice-stage="DEVELOPMENT">
+  <test thread-count="5" parallel="methods" name="Smoke(failed)">
+    <classes>
+      <class name="tests.MagentoTest">
+        <methods>
+          <include name="init"/>
+          <include name="setUpExtentReport"/>
+          <include name="searchOnItem" invocation-numbers="0"/>
+          <include name="tearDownReport"/>
+          <include name="captureResult"/>
+        </methods>
+      </class> <!-- tests.MagentoTest -->
+    </classes>
+  </test> <!-- Smoke(failed) -->
+</suite> <!-- Failed suite [All Test Suite] -->

@@ -1,0 +1,1 @@
+{"uuid":"7071a823-80b9-49e4-b46c-69b9cdc11e58","name":"Circunomics","children":["a94be3b7-9a66-4816-9711-13d195f1446e"],"befores":[{"name":"init","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1740182856600,"stop":1740182866136}],"afters":[],"start":1740182856564,"stop":1740182903977}

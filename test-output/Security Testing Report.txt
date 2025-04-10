@@ -1,0 +1,66 @@
+🐞 Bug Report 1: Sign-Up Form Accepts Invalid Email
+🔐 Issue Type: Input Validation – Email Format
+
+🎯 Affected Page: Sign-Up / Create Account
+
+📝 Description:
+The system accepts an invalid email format (e.g., abc@xyz) during user registration and proceeds without showing an error.
+
+🧪 Steps to Reproduce:
+
+Navigate to the Sign-Up / Create Account page.
+
+Enter a name and use abc@xyz as the email address.
+
+Fill in all other required fields with valid data.
+
+Click Create an Account.
+
+📌 Expected Result:
+An error message should appear stating the email is invalid.
+
+❌ Actual Result:
+Account creation proceeds without validating the email format.
+
+🔺 Severity: Medium
+
+✅ Recommendation:
+Implement regex-based email validation on both frontend and backend. Example pattern:
+
+🐞 Bug Report 2: Invalid Customer Details Accepted During Complete Order
+🔐 Issue Type: Input Validation – Checkout Form
+
+🎯 Affected Page: Checkout / Shipping & Payment Step
+
+📝 Description:
+The checkout process accepts invalid customer information, such as random characters in the phone number and special characters in the street name or city fields, without any validation errors.
+
+🧪 Steps to Reproduce:
+
+Add a product to the cart and proceed to Checkout.
+
+Enter invalid data in the shipping form:
+
+Name: @@@
+
+Street: !!!$$@
+
+Phone: abcd123
+
+Continue to the next step.
+
+📌 Expected Result:
+The system should highlight incorrect fields and prevent proceeding until valid input is provided.
+
+❌ Actual Result:
+The checkout continues without any warning or error.
+
+🔺 Severity: High (Potential abuse, delivery issues)
+
+✅ Recommendation:
+
+Validate phone number format (digits only, length checks).
+
+Sanitize address fields to allow only valid characters.
+
+Add frontend error messages and enforce backend checks.

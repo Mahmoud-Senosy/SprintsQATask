@@ -1,0 +1,1 @@
+{"uuid":"c0f3e25a-151a-472b-9aac-f652523751c9","name":"tests.MagentoTest.init","children":["e3ef02d6-89bd-40d8-9d9a-c4d69c7088de"],"description":"","befores":[{"name":"init","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1743868925981,"stop":1743869105212}],"afters":[],"start":1743868925981,"stop":1743869105212}
