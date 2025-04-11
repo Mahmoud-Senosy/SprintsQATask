@@ -115,6 +115,12 @@ public class BaseTest {
     public void init(Method method) {
         // Create a new ExtentTest for each test method, making it thread-safe
         setExtentTest(extent.createTest(method.getName()));
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--user-data-dir=/tmp/chrome-user-data-dir");
+
+
+
 
         // Your custom setup for opening the browser
         setUp("https://magento.softwaretestingboard.com/");
