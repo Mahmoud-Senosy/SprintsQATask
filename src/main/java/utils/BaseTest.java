@@ -67,15 +67,19 @@ public class BaseTest {
     private static ThreadLocal<ExtentTest>    extentTest    = new ThreadLocal<>();
 
 
-    public static  void setUp(String url) {
-        // Automatically manage chromedriver version matching the browser
+    public static void setUp(String url) {
         WebDriverManager.chromedriver().setup();
-        //driver = new ChromeDriver();
 
-        setDriver( new ChromeDriver(new ChromeOptions()));
+        String userDataDir = System.getProperty("user.dir") + "/target/user-data-dir/" + Thread.currentThread().getId();
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--user-data-dir=" + userDataDir);
+
+        setDriver(new ChromeDriver(options));
 
         setJavascriptExecutor((JavascriptExecutor) getDriver());
-        setWebDriverWait( new WebDriverWait(getDriver(), Duration.ofSeconds(60)));
+        setWebDriverWait(new WebDriverWait(getDriver(), Duration.ofSeconds(60)));
         getDriver().get(url);
     }
 
