@@ -34,6 +34,16 @@ jobs:
       - name: Run Tests
         run: mvn test
 
+      - name: Debug test-output folder
+        run: ls -R Sprints/test-output
+
+      - name: Upload Extent HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extent-html-report
+          path: test-output
+          
       - name: Upload Surefire Reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,10 +57,3 @@ jobs:
         with:
           name: html-test-report
           path: target/site
-
-      - name: Upload Extent HTML Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: extent-html-report
-          path: target/extent-report
