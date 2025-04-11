@@ -122,9 +122,10 @@ public class BaseTest {
         setExtentTest(extent.createTest(method.getName()));
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
-        options.addArguments("--user-data-dir=/tmp/chrome-user-data-dir");
+       
 
 
+        options.addArguments("--user-data-dir=/tmp/chrome_profile_" + System.currentTimeMillis());
 
 
         // Your custom setup for opening the browser
