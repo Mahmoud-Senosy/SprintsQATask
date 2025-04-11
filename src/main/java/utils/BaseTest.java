@@ -20,6 +20,7 @@ import org.testng.ITestResult;
 import org.testng.annotations.*;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -162,43 +163,41 @@ public class BaseTest {
 
     @DataProvider(name = "SignInData")
     public Object[][] SignInDataProvider() throws IOException {
-
-        ExcelUtils excelUtils = new ExcelUtils(System.getProperty("user.dir") + "/resources/testdata.xlsx");
+        String excelPath = System.getProperty("user.dir") + "/resources/testdata.xlsx";
+        File excelFile = new File(excelPath);
+        if (!excelFile.exists()) {
+            throw new FileNotFoundException("Excel file not found at: " + excelPath);
+        }
+        ExcelUtils excelUtils = new ExcelUtils(excelPath);
         List<String[]> data = excelUtils.getData("Credentials", "SignIn");
         excelUtils.close();
-
-        Object[][] result = new Object[data.size()][];
-        for (int i = 0; i < data.size(); i++) {
-            result[i] = data.get(i);
-        }
-        return result;
+        return data.toArray(new Object[0][]);
     }
+
     @DataProvider(name = "SignOutData")
     public Object[][] SignOutDataDataProvider() throws IOException {
-
-        ExcelUtils excelUtils = new ExcelUtils(System.getProperty("user.dir") + "/resources/testdata.xlsx");
+        String excelPath = System.getProperty("user.dir") + "/resources/testdata.xlsx";
+        File excelFile = new File(excelPath);
+        if (!excelFile.exists()) {
+            throw new FileNotFoundException("Excel file not found at: " + excelPath);
+        }
+        ExcelUtils excelUtils = new ExcelUtils(excelPath);
         List<String[]> data = excelUtils.getData("Credentials", "SignOut");
         excelUtils.close();
-
-        Object[][] result = new Object[data.size()][];
-        for (int i = 0; i < data.size(); i++) {
-            result[i] = data.get(i);
-        }
-        return result;
+        return data.toArray(new Object[0][]);
     }
 
     @DataProvider(name = "SearchData")
     public Object[][] SearchDataProvider() throws IOException {
-
-        ExcelUtils excelUtils = new ExcelUtils(System.getProperty("user.dir") + "/resources/testdata.xlsx");
+        String excelPath = System.getProperty("user.dir") + "/resources/testdata.xlsx";
+        File excelFile = new File(excelPath);
+        if (!excelFile.exists()) {
+            throw new FileNotFoundException("Excel file not found at: " + excelPath);
+        }
+        ExcelUtils excelUtils = new ExcelUtils(excelPath);
         List<String[]> data = excelUtils.getData("Credentials", "Search");
         excelUtils.close();
-
-        Object[][] result = new Object[data.size()][];
-        for (int i = 0; i < data.size(); i++) {
-            result[i] = data.get(i);
-        }
-        return result;
+        return data.toArray(new Object[0][]);
     }
 
 }
