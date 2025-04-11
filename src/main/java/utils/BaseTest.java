@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -32,42 +33,53 @@ public class BaseTest {
 
     //private static final ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 
+
     public static WebDriver getDriver() {
         if (driver.get() == null) {
             ChromeOptions options = new ChromeOptions();
 
-            // Create unique profile directory per thread
-            String tempProfilePath = System.getProperty("java.io.tmpdir") +
-                    "chrome_profile_" +
-                    Thread.currentThread().getId() + "_" +
-                    System.currentTimeMillis();
-            new File(tempProfilePath).mkdirs();
-
-            // Configure Chrome options
+            // Remove user-data-dir completely and use incognito mode instead
             options.addArguments(
-                    "--user-data-dir=" + tempProfilePath,
+                    "--incognito",
                     "--remote-allow-origins=*",
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
                     "--headless=new"
             );
 
-            // Set browser language and other preferences if needed
-            options.addArguments("--lang=en-US");
+            // Disable the use of user data directory completely
+            options.setExperimentalOption("useAutomationExtension", false);
             options.setExperimentalOption("excludeSwitches",
-                    new String[]{"enable-automation"});
+                    Collections.singletonList("enable-automation"));
+
+            // Set explicit binary path if needed (uncomment if required)
+            // options.setBinary("/usr/bin/google-chrome");
 
             try {
                 driver.set(new ChromeDriver(options));
             } catch (SessionNotCreatedException e) {
-                // Clean up and retry once if failed
-                cleanupChromeProcesses();
+                // Final fallback - retry with completely clean state
+                killAllChromeProcesses();
                 driver.set(new ChromeDriver(options));
             }
         }
         return driver.get();
     }
-
+    private static void killAllChromeProcesses() {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
+                Runtime.getRuntime().exec("pkill -9 -f chrome");
+                Runtime.getRuntime().exec("pkill -9 -f chromedriver");
+            } else if (os.contains("win")) {
+                Runtime.getRuntime().exec("taskkill /f /im chrome.exe");
+                Runtime.getRuntime().exec("taskkill /f /im chromedriver.exe");
+            }
+            Thread.sleep(2000); // Wait for processes to terminate
+        } catch (Exception e) {
+            System.err.println("Error killing processes: " + e.getMessage());
+        }
+    }
     private static void cleanupChromeProcesses() {
         try {
             String os = System.getProperty("os.name").toLowerCase();
@@ -135,11 +147,15 @@ public class BaseTest {
     /**
      * To Close and Remove local Thread
      */
-    public static synchronized void tearDown() {
-        //
 
-        if (getDriver()!= null) {
-            getDriver().close();
+    public static synchronized void tearDown()  {
+        if (driver.get() != null) {
+            try {
+                driver.get().quit();
+            } catch (Exception e) {
+                System.err.println("Error quitting driver: " + e.getMessage());
+                killAllChromeProcesses();
+            }
             driver.remove();
         }
     }
