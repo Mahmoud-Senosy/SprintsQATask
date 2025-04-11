@@ -8,10 +8,7 @@ import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.configuration.Theme;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.FluentWait;
@@ -33,10 +30,59 @@ public class BaseTest {
     public ExtentReports extent;
 
 
+    //private static final ThreadLocal<WebDriver> driver = new ThreadLocal<>();
+
     public static WebDriver getDriver() {
+        if (driver.get() == null) {
+            ChromeOptions options = new ChromeOptions();
+
+            // Create unique profile directory per thread
+            String tempProfilePath = System.getProperty("java.io.tmpdir") +
+                    "chrome_profile_" +
+                    Thread.currentThread().getId() + "_" +
+                    System.currentTimeMillis();
+            new File(tempProfilePath).mkdirs();
+
+            // Configure Chrome options
+            options.addArguments(
+                    "--user-data-dir=" + tempProfilePath,
+                    "--remote-allow-origins=*",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--headless=new"
+            );
+
+            // Set browser language and other preferences if needed
+            options.addArguments("--lang=en-US");
+            options.setExperimentalOption("excludeSwitches",
+                    new String[]{"enable-automation"});
+
+            try {
+                driver.set(new ChromeDriver(options));
+            } catch (SessionNotCreatedException e) {
+                // Clean up and retry once if failed
+                cleanupChromeProcesses();
+                driver.set(new ChromeDriver(options));
+            }
+        }
         return driver.get();
     }
 
+    private static void cleanupChromeProcesses() {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("linux") || os.contains("mac")) {
+                Runtime.getRuntime().exec("pkill -f chrome");
+                Runtime.getRuntime().exec("pkill -f chromedriver");
+            } else if (os.contains("win")) {
+                Runtime.getRuntime().exec("taskkill /f /im chrome.exe");
+                Runtime.getRuntime().exec("taskkill /f /im chromedriver.exe");
+            }
+            Thread.sleep(1000); // Wait for processes to terminate
+        } catch (Exception e) {
+            System.err.println("Error cleaning up processes: " + e.getMessage());
+        }
+    }
     public static void setDriver(WebDriver driver) {
         BaseTest.driver.set(driver);
     }
