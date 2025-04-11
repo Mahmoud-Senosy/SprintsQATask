@@ -41,12 +41,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Run Tests
+      - name: Create test-output directory
+        run: mkdir -p test-output
+
+      - name: Run Tests with Extent Report
         run: |
           mvn clean test -Dtest=MagentoTest -e -X
           cat target/surefire-reports/TEST-tests.MagentoTest.txt || true
+          
+          
+          if [ -f "test-output/ExtentReport.html" ]; then
+            echo "Extent Report generated successfully"
+          else
+            echo "WARNING: Extent Report not found!"
+            ls -la test-output/
+          fi
 
-      - name: Upload Reports
+      - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -54,3 +65,19 @@ jobs:
           path: |
             target/surefire-reports
             test-output
+
+      - name: Publish Extent Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extent-report
+          path: test-output/ExtentReport*.html
+          retention-days: 5
+
+      - name: Archive Extent Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extent-report-archive
+          path: test-output/
+          retention-days: 5
