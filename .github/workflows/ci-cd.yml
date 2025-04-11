@@ -28,33 +28,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Prepare test-output folder
+        run: mkdir -p test-output && chmod -R 777 test-output
+
       - name: Build with Maven
         run: mvn clean compile
 
-      - name: Run MagentoTest
-        run: mvn -Dtest=tests.MagentoTest test
+      - name: Run MagentoTest with debug
+        run: mvn -Dtest=tests.MagentoTest test -e -X
 
+      - name: Debug project structure
+        run: |
+          ls -R
+          pwd
 
-      - name: Debug test-output folder
-        run: ls -R Sprints/test-output
+      - name: Check Extent Report Content
+        if: always()
+        run: |
+          ls -la test-output/
+          cat test-output/*.html || echo "No HTML report found"
 
       - name: Upload Extent HTML Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: extent-html-report
-          path: test-output
-          
-      - name: Upload Surefire Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: surefire-reports
-          path: target/surefire-reports
-
-      - name: Upload HTML Test Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: html-test-report
-          path: target/site
+          path: test-output/  
