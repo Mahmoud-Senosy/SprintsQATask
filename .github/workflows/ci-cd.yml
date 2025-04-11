@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Initial cleanup of old reports
+      # Initial cleanup
       - name: Clean previous test artifacts
         run: |
           echo "Cleaning previous test outputs..."
@@ -28,15 +28,10 @@ jobs:
       # Set up environment
       - name: Setup environment
         run: |
-          # Set permissions
           sudo chmod -R 777 .
-          
-          # Install Chrome
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
           echo "Chrome version: $(google-chrome --version)"
-          
-          # Cleanup previous sessions
           sudo rm -rf /tmp/.com.google.Chrome* || true
           sudo rm -rf /tmp/chrome-profile* || true
           pkill -9 -f chrome || true
@@ -70,14 +65,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Execute tests
+      - name: Execute all tests
         run: |
           # Force clean report directories
           rm -rf test-output/* || true
           rm -rf target/surefire-reports/* || true
           
+          # Run all tests in MagentoTest class
           mvn clean test \
-            -Dtest=MagentoTest \
+            -Dtest=tests.MagentoTest \
             -Dmaven.test.failure.ignore=true \
             -DargLine="-Djava.awt.headless=true" \
             -e -X
@@ -90,20 +86,16 @@ jobs:
       - name: Process test results
         if: always()
         run: |
-          # Process surefire results
-          if [ -f "target/surefire-reports/TEST-tests.MagentoTest.txt" ]; then
+          if [ -f "target/surefire-reports/TEST-tests.MagentoTest.xml" ]; then
             echo "--- Test Results ---"
-            cat target/surefire-reports/TEST-tests.MagentoTest.txt
-          else
-            echo "::warning::No surefire test results found!"
+            cat target/surefire-reports/TEST-tests.MagentoTest.txt || echo "No text report found"
           fi
           
-          # Verify extent report
           if ls test-output/ExtentReport*.html 1> /dev/null 2>&1; then
-            echo "Extent Report generated:"
+            echo "Extent Reports:"
             ls -la test-output/ExtentReport*.html
           else
-            echo "::warning::No Extent Report generated!"
+            echo "::warning::No Extent Reports generated!"
           fi
 
       - name: Post-execution cleanup
