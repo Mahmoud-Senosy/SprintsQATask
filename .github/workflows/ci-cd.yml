@@ -29,13 +29,13 @@ jobs:
         run: mvn clean test
 
       - name: Upload Surefire Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: surefire-reports
           path: target/surefire-reports/
 
       - name: Upload Extent Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: extent-report
           path: target/extent-report/ExtentReport.html
