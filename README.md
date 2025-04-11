@@ -104,7 +104,6 @@ Screenshots
 Improve CI pipeline with Slack notifications or email alerts.
 
 👨‍💻 Author
-
 Mahmoud Senosy
 Senior Software Test Automaation Engineer
 📧 Email: mahmoudsenosy227@gmail.com
