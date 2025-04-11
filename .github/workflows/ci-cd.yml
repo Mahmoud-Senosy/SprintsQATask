@@ -1,44 +1,27 @@
-name: CI/CD Pipeline for SprintsQATask
+name: Java CI with Maven
 
 on:
   push:
-    branches:
-      - main  # or any other branch you want to trigger the action on
+    branches: [ master ]
   pull_request:
-    branches:
-      - main  # or any other branch you want to trigger the action on
+    branches: [ master ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # You can choose another OS like windows-latest or macos-latest
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up JDK
-        uses: actions/setup-java@v2
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'  # or another version of Java
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Set up Maven
-        uses: actions/setup-maven@v2
-        with:
-          maven-version: '3.6.3'
-
-      - name: Install dependencies
-        run: mvn install -DskipTests=true
+      - name: Build with Maven
+        run: mvn clean install
 
       - name: Run tests
         run: mvn test
-
-      - name: Publish Test Results
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: target/test-*.xml  # Ensure this path matches your test results
-
-      - name: Generate Reports
-        run: mvn site
-        # Or any other command to generate reports like ExtentReport or Allure
-
