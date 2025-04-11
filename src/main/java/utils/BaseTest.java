@@ -22,10 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class BaseTest {
     public ExtentReports extent;
@@ -38,8 +35,7 @@ public class BaseTest {
         if (driver.get() == null) {
             ChromeOptions options = new ChromeOptions();
 
-            // 1. Remove user-data-dir completely (main fix)
-            // 2. Add essential arguments for CI environment
+            // Essential arguments for Azure CI
             options.addArguments(
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
@@ -49,20 +45,41 @@ public class BaseTest {
                     "--window-size=1920,1080"
             );
 
-            // 3. Disable extensions and automation flags
-            options.setExperimentalOption("excludeSwitches",
-                    Collections.singletonList("enable-automation"));
+            // Critical: Disable all user data directories
+            options.addArguments("--incognito");
             options.setExperimentalOption("useAutomationExtension", false);
+            options.setExperimentalOption("excludeSwitches",
+                    Arrays.asList("enable-automation", "load-extension"));
+
+            // For Azure Linux agents specifically
+            options.setBinary("/usr/bin/google-chrome");
 
             try {
                 driver.set(new ChromeDriver(options));
             } catch (SessionNotCreatedException e) {
-                // Emergency cleanup and retry
-                forceCleanup();
+                // Nuclear option for Azure
+                cleanAzureEnvironment();
                 driver.set(new ChromeDriver(options));
             }
         }
         return driver.get();
+    }
+
+    private static void cleanAzureEnvironment() {
+        try {
+            // Kill all Chrome processes
+            Runtime.getRuntime().exec("pkill -9 -f chrome");
+            Runtime.getRuntime().exec("pkill -9 -f chromedriver");
+
+            // Clean temp directories
+            Runtime.getRuntime().exec("rm -rf /tmp/.com.google.Chrome*");
+            Runtime.getRuntime().exec("rm -rf /tmp/chrome-profile*");
+            Runtime.getRuntime().exec("rm -rf /home/runner/.config/google-chrome");
+
+            Thread.sleep(3000); // Wait for cleanup
+        } catch (Exception e) {
+            System.err.println("Azure cleanup failed: " + e.getMessage());
+        }
     }
 
     private static void forceCleanup() {
@@ -164,13 +181,12 @@ public class BaseTest {
                 driver.get().quit();
             }
         } catch (Exception e) {
-            System.err.println("Failed to quit driver: " + e.getMessage());
+            System.err.println("Driver quit failed: " + e.getMessage());
         } finally {
             driver.remove();
-            forceCleanup(); // Extra insurance
+            cleanAzureEnvironment(); // Extra cleanup
         }
     }
-
     @BeforeTest
     public void setUpExtentReport() {
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
