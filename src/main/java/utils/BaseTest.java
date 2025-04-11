@@ -69,7 +69,6 @@ public class BaseTest {
 
     public static void setUp(String url) {
         WebDriverManager.chromedriver().setup();
-
         String userDataDir = System.getProperty("user.dir") + "/target/user-data-dir/" + Thread.currentThread().getId();
 
         ChromeOptions options = new ChromeOptions();
@@ -82,6 +81,7 @@ public class BaseTest {
         setWebDriverWait(new WebDriverWait(getDriver(), Duration.ofSeconds(60)));
         getDriver().get(url);
     }
+
 
 
     /**
