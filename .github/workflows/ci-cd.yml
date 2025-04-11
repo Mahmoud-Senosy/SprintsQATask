@@ -16,26 +16,40 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Set up permissions and Chrome
-      - name: Set up permissions and Chrome
+      # Initial cleanup of old reports
+      - name: Clean previous test artifacts
         run: |
+          echo "Cleaning previous test outputs..."
+          sudo rm -rf test-output/ || true
+          sudo rm -rf target/surefire-reports/ || true
+          mkdir -p test-output target/surefire-reports
+          sudo chmod -R 777 test-output target
+
+      # Set up environment
+      - name: Setup environment
+        run: |
+          # Set permissions
           sudo chmod -R 777 .
+          
+          # Install Chrome
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
-          google-chrome --version
-          sudo rm -rf /tmp/.com.google.Chrome*
-          sudo rm -rf /tmp/chrome-profile*
+          echo "Chrome version: $(google-chrome --version)"
+          
+          # Cleanup previous sessions
+          sudo rm -rf /tmp/.com.google.Chrome* || true
+          sudo rm -rf /tmp/chrome-profile* || true
           pkill -9 -f chrome || true
           pkill -9 -f chromedriver || true
 
-      - name: Verify Test Data
+      - name: Verify test resources
         run: |
           mkdir -p resources
-          ls -la resources/
           if [ -f "resources/testdata.xlsx" ]; then
-            echo "Test data file exists"
+            echo "Test data verified"
+            ls -la resources/testdata.xlsx
           else
-            echo "ERROR: Test data file missing!"
+            echo "::error::Test data file missing!"
             exit 1
           fi
 
@@ -44,62 +58,76 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Cache Maven packages
+      - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.m2
+          path: |
+            ~/.m2
+            target/
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Create test-output directory
+      - name: Execute tests
         run: |
-          mkdir -p test-output
-          sudo chmod -R 777 test-output
-
-      - name: Run Tests with Extent Report
-        run: |
-          mvn clean test -Dtest=MagentoTest -e -X -Dmaven.test.failure.ignore=true
-          cat target/surefire-reports/TEST-tests.MagentoTest.txt || true
+          # Force clean report directories
+          rm -rf test-output/* || true
+          rm -rf target/surefire-reports/* || true
           
-          if [ -f "test-output/ExtentReport.html" ]; then
-            echo "Extent Report generated successfully"
+          mvn clean test \
+            -Dtest=MagentoTest \
+            -Dmaven.test.failure.ignore=true \
+            -DargLine="-Djava.awt.headless=true" \
+            -e -X
+            
+          # Verify reports
+          echo "--- Generated Reports ---"
+          find test-output/ -type f
+          find target/surefire-reports/ -type f
+
+      - name: Process test results
+        if: always()
+        run: |
+          # Process surefire results
+          if [ -f "target/surefire-reports/TEST-tests.MagentoTest.txt" ]; then
+            echo "--- Test Results ---"
+            cat target/surefire-reports/TEST-tests.MagentoTest.txt
           else
-            echo "WARNING: Extent Report not found!"
-            ls -la test-output/
+            echo "::warning::No surefire test results found!"
+          fi
+          
+          # Verify extent report
+          if ls test-output/ExtentReport*.html 1> /dev/null 2>&1; then
+            echo "Extent Report generated:"
+            ls -la test-output/ExtentReport*.html
+          else
+            echo "::warning::No Extent Report generated!"
           fi
 
-      # Post-test cleanup
-      - name: Cleanup Chrome processes
+      - name: Post-execution cleanup
         if: always()
         run: |
           pkill -9 -f chrome || true
           pkill -9 -f chromedriver || true
-          sudo rm -rf /tmp/.com.google.Chrome*
-          sudo rm -rf /tmp/chrome-profile*
+          sudo rm -rf /tmp/.com.google.Chrome* || true
+          sudo rm -rf /tmp/chrome-profile* || true
 
-      - name: Upload Test Reports
+      - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: test-artifacts-${{ github.run_number }}
           path: |
-            target/surefire-reports
-            test-output
+            target/surefire-reports/
+            test-output/
+          retention-days: 3
 
-      - name: Publish Extent Report
+      - name: Upload extent report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: extent-report
+          name: extent-report-${{ github.run_number }}
           path: test-output/ExtentReport*.html
-          retention-days: 5
-
-      - name: Archive Extent Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: extent-report-archive
-          path: test-output/
-          retention-days: 5
+          retention-days: 3
