@@ -108,4 +108,4 @@ Mahmoud Senosy
 Senior Software Test Automaation Engineer
 📧 Email: mahmoudsenosy227@gmail.com
 🌍 Location: Giza, Egypt
-Mobile : 01065824069
+   Mobile : 01065824069
