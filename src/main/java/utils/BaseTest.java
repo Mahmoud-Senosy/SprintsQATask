@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class BaseTest {
     public ExtentReports extent;
@@ -122,10 +123,8 @@ public class BaseTest {
         setExtentTest(extent.createTest(method.getName()));
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
-       
-
-
-        options.addArguments("--user-data-dir=/tmp/chrome_profile_" + System.currentTimeMillis());
+     
+        options.addArguments("--user-data-dir=/tmp/chrome_profile_" + UUID.randomUUID());
 
 
         // Your custom setup for opening the browser
