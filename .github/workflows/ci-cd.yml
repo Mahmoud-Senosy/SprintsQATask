@@ -35,12 +35,15 @@ jobs:
         run: mvn test
 
       - name: Upload Surefire Reports
-        if: always() # Upload even if tests fail
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
           path: target/surefire-reports
 
-      - name: Archive HTML Test Report (if exists)
+      - name: Upload HTML Test Report
         if: always()
-        uses
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-test-report
+          path: target/site
