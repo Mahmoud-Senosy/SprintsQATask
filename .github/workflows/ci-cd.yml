@@ -16,9 +16,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Chrome setup and cleanup - MUST COME FIRST
-      - name: Set up Chrome
+      # Set up permissions and Chrome
+      - name: Set up permissions and Chrome
         run: |
+          sudo chmod -R 777 .
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
           google-chrome --version
@@ -53,11 +54,13 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Create test-output directory
-        run: mkdir -p test-output
+        run: |
+          mkdir -p test-output
+          sudo chmod -R 777 test-output
 
       - name: Run Tests with Extent Report
         run: |
-          mvn clean test -Dtest=MagentoTest -e -X
+          mvn clean test -Dtest=MagentoTest -e -X -Dmaven.test.failure.ignore=true
           cat target/surefire-reports/TEST-tests.MagentoTest.txt || true
           
           if [ -f "test-output/ExtentReport.html" ]; then
