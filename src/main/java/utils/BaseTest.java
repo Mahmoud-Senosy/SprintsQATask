@@ -38,32 +38,42 @@ public class BaseTest {
         if (driver.get() == null) {
             ChromeOptions options = new ChromeOptions();
 
-            // Remove user-data-dir completely and use incognito mode instead
+            // 1. Remove user-data-dir completely (main fix)
+            // 2. Add essential arguments for CI environment
             options.addArguments(
-                    "--incognito",
-                    "--remote-allow-origins=*",
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
-                    "--headless=new"
+                    "--headless=new",
+                    "--remote-allow-origins=*",
+                    "--disable-gpu",
+                    "--window-size=1920,1080"
             );
 
-            // Disable the use of user data directory completely
-            options.setExperimentalOption("useAutomationExtension", false);
+            // 3. Disable extensions and automation flags
             options.setExperimentalOption("excludeSwitches",
                     Collections.singletonList("enable-automation"));
-
-            // Set explicit binary path if needed (uncomment if required)
-            // options.setBinary("/usr/bin/google-chrome");
+            options.setExperimentalOption("useAutomationExtension", false);
 
             try {
                 driver.set(new ChromeDriver(options));
             } catch (SessionNotCreatedException e) {
-                // Final fallback - retry with completely clean state
-                killAllChromeProcesses();
+                // Emergency cleanup and retry
+                forceCleanup();
                 driver.set(new ChromeDriver(options));
             }
         }
         return driver.get();
+    }
+
+    private static void forceCleanup() {
+        try {
+            // Linux-specific cleanup (for Azure)
+            Runtime.getRuntime().exec("pkill -9 -f chrome");
+            Runtime.getRuntime().exec("pkill -9 -f chromedriver");
+            Thread.sleep(2000); // Wait for cleanup
+        } catch (Exception e) {
+            System.err.println("Cleanup failed: " + e.getMessage());
+        }
     }
     private static void killAllChromeProcesses() {
         try {
@@ -148,15 +158,16 @@ public class BaseTest {
      * To Close and Remove local Thread
      */
 
-    public static synchronized void tearDown()  {
-        if (driver.get() != null) {
-            try {
+    public static synchronized void tearDown() {
+        try {
+            if (driver.get() != null) {
                 driver.get().quit();
-            } catch (Exception e) {
-                System.err.println("Error quitting driver: " + e.getMessage());
-                killAllChromeProcesses();
             }
+        } catch (Exception e) {
+            System.err.println("Failed to quit driver: " + e.getMessage());
+        } finally {
             driver.remove();
+            forceCleanup(); // Extra insurance
         }
     }
 
@@ -193,7 +204,7 @@ public class BaseTest {
         setUp("https://magento.softwaretestingboard.com/");
         getDriver().manage().window().maximize();  // Maximize window
     }
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void captureResult(ITestResult result) {
         ExtentTest test = getExtentTest(); // Get the current thread's ExtentTest
 
