@@ -2,9 +2,9 @@ name: Run Maven Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
         run: mvn test
 
       - name: Upload Surefire Reports
-        if: always() # حتى لو فيه فشل في التستات
+        if: always() # Upload even if tests fail
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
@@ -43,9 +43,4 @@ jobs:
 
       - name: Archive HTML Test Report (if exists)
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: html-report
-          path: |
-            target/site/surefire-report.html
-            target/site/surefire-report.html/index.html
+        uses
