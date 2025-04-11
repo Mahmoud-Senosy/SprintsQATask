@@ -16,6 +16,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Chrome setup and cleanup - MUST COME FIRST
+      - name: Set up Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+          sudo rm -rf /tmp/.com.google.Chrome*
+          sudo rm -rf /tmp/chrome-profile*
+          pkill -9 -f chrome || true
+          pkill -9 -f chromedriver || true
+
       - name: Verify Test Data
         run: |
           mkdir -p resources
@@ -49,13 +60,21 @@ jobs:
           mvn clean test -Dtest=MagentoTest -e -X
           cat target/surefire-reports/TEST-tests.MagentoTest.txt || true
           
-          
           if [ -f "test-output/ExtentReport.html" ]; then
             echo "Extent Report generated successfully"
           else
             echo "WARNING: Extent Report not found!"
             ls -la test-output/
           fi
+
+      # Post-test cleanup
+      - name: Cleanup Chrome processes
+        if: always()
+        run: |
+          pkill -9 -f chrome || true
+          pkill -9 -f chromedriver || true
+          sudo rm -rf /tmp/.com.google.Chrome*
+          sudo rm -rf /tmp/chrome-profile*
 
       - name: Upload Test Reports
         if: always()

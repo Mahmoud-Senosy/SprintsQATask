@@ -35,35 +35,32 @@ public class BaseTest {
         if (driver.get() == null) {
             ChromeOptions options = new ChromeOptions();
 
-            // Essential arguments for Azure CI
+            // ABSOLUTE MINIMUM CONFIG THAT WORKS IN AZURE
             options.addArguments(
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
                     "--headless=new",
-                    "--remote-allow-origins=*",
-                    "--disable-gpu",
-                    "--window-size=1920,1080"
+                    "--remote-allow-origins=*"
             );
 
-            // Critical: Disable all user data directories
+            // CRITICAL - THIS FIXES USER-DATA-DIR ISSUE
             options.addArguments("--incognito");
             options.setExperimentalOption("useAutomationExtension", false);
-            options.setExperimentalOption("excludeSwitches",
-                    Arrays.asList("enable-automation", "load-extension"));
 
-            // For Azure Linux agents specifically
-            options.setBinary("/usr/bin/google-chrome");
-
+            // NUCLEAR OPTION - FORCE CLEAN START
             try {
-                driver.set(new ChromeDriver(options));
-            } catch (SessionNotCreatedException e) {
-                // Nuclear option for Azure
-                cleanAzureEnvironment();
-                driver.set(new ChromeDriver(options));
+                Runtime.getRuntime().exec("pkill -9 -f chrome");
+                Runtime.getRuntime().exec("pkill -9 -f chromedriver");
+                Thread.sleep(2000);
+            } catch (Exception e) {
+                System.out.println("Cleanup warning: " + e.getMessage());
             }
+
+            driver.set(new ChromeDriver(options));
         }
         return driver.get();
     }
+
 
     private static void cleanAzureEnvironment() {
         try {
@@ -176,17 +173,15 @@ public class BaseTest {
      */
 
     public static synchronized void tearDown() {
-        try {
-            if (driver.get() != null) {
+
+            try {
                 driver.get().quit();
+            } catch (Exception e) {
+                System.out.println("Cleanup error: " + e.getMessage());
+            } finally {
+                driver.remove();
             }
-        } catch (Exception e) {
-            System.err.println("Driver quit failed: " + e.getMessage());
-        } finally {
-            driver.remove();
-            cleanAzureEnvironment(); // Extra cleanup
         }
-    }
     @BeforeTest
     public void setUpExtentReport() {
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
